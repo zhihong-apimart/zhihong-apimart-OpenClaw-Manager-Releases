@@ -25,9 +25,12 @@ OpenClaw Manager 是 [OpenClaw](https://github.com/open-claw/openclaw) AI 网关
 ### macOS
 
 1. 下载对应架构的 `.zip` 文件
-2. 解压得到 `OpenClaw Manager.app`
-3. 双击打开（首次运行需右键 → 打开）
-4. 浏览器会自动打开管理页面
+2. 解压得到 `OpenClaw Manager.app`，拖入 `/Applications`
+3. 终端执行以下命令移除隔离属性：
+   ```bash
+   sudo xattr -rd com.apple.quarantine "/Applications/OpenClaw Manager.app"
+   ```
+4. 双击打开，浏览器会自动打开管理页面
 
 ### Linux
 
