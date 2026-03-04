@@ -10,15 +10,15 @@ OpenClaw Manager 是 [OpenClaw](https://github.com/open-claw/openclaw) AI 网关
 
 ### 下载
 
-从 [Releases](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest) 下载最新版本：
+从 [Releases](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest) 下载最新版本：
 
 | 平台 | 架构 | 下载 |
 |------|------|------|
-| **Windows** | x64 | [openclaw-manager-win-x64.exe](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-win-x64.exe) |
-| **macOS** | Apple Silicon (M1/M2/M3/M4) | [openclaw-manager-macos-arm64.zip](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-macos-arm64.zip) |
-| **macOS** | Intel | [openclaw-manager-macos-x64.zip](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-macos-x64.zip) |
-| **Linux** | x64 | [openclaw-manager-linux-x64](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-x64) |
-| **Linux** | ARM64 | [openclaw-manager-linux-arm64](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-arm64) |
+| **Windows** | x64 | [openclaw-manager-win-x64.exe](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-win-x64.exe) |
+| **macOS** | Apple Silicon (M1/M2/M3/M4) | [openclaw-manager-macos-arm64.zip](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-macos-arm64.zip) |
+| **macOS** | Intel | [openclaw-manager-macos-x64.zip](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-macos-x64.zip) |
+| **Linux** | x64 | [openclaw-manager-linux-x64](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-x64) |
+| **Linux** | ARM64 | [openclaw-manager-linux-arm64](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-arm64) |
 
 ### 快速开始
 
@@ -42,7 +42,7 @@ OpenClaw Manager 是 [OpenClaw](https://github.com/open-claw/openclaw) AI 网关
 
 ```bash
 # 下载（以 x64 为例）
-wget https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-x64
+wget https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-x64
 chmod +x openclaw-manager-linux-x64
 
 # 运行（自动后台运行）
@@ -108,15 +108,15 @@ OpenClaw Manager is a visual management tool for the [OpenClaw](https://github.c
 
 ### Download
 
-Get the latest version from [Releases](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest):
+Get the latest version from [Releases](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest):
 
 | Platform | Arch | Download |
 |----------|------|----------|
-| **Windows** | x64 | [openclaw-manager-win-x64.exe](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-win-x64.exe) |
-| **macOS** | Apple Silicon (M1/M2/M3/M4) | [openclaw-manager-macos-arm64.zip](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-macos-arm64.zip) |
-| **macOS** | Intel | [openclaw-manager-macos-x64.zip](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-macos-x64.zip) |
-| **Linux** | x64 | [openclaw-manager-linux-x64](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-x64) |
-| **Linux** | ARM64 | [openclaw-manager-linux-arm64](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-arm64) |
+| **Windows** | x64 | [openclaw-manager-win-x64.exe](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-win-x64.exe) |
+| **macOS** | Apple Silicon (M1/M2/M3/M4) | [openclaw-manager-macos-arm64.zip](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-macos-arm64.zip) |
+| **macOS** | Intel | [openclaw-manager-macos-x64.zip](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-macos-x64.zip) |
+| **Linux** | x64 | [openclaw-manager-linux-x64](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-x64) |
+| **Linux** | ARM64 | [openclaw-manager-linux-arm64](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-arm64) |
 
 ### Quick Start
 
@@ -140,7 +140,7 @@ Get the latest version from [Releases](https://github.com/zhihong-apimart/zhihon
 
 ```bash
 # Download (x64 example)
-wget https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-x64
+wget https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-x64
 chmod +x openclaw-manager-linux-x64
 
 # Run (auto-daemonizes)
@@ -190,15 +190,15 @@ OpenClaw Manager は [OpenClaw](https://github.com/open-claw/openclaw) AI ゲー
 
 ### ダウンロード
 
-[Releases](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest) から最新版をダウンロード：
+[Releases](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest) から最新版をダウンロード：
 
 | プラットフォーム | アーキテクチャ | ダウンロード |
 |------------------|----------------|--------------|
-| **Windows** | x64 | [openclaw-manager-win-x64.exe](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-win-x64.exe) |
-| **macOS** | Apple Silicon (M1/M2/M3/M4) | [openclaw-manager-macos-arm64.zip](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-macos-arm64.zip) |
-| **macOS** | Intel | [openclaw-manager-macos-x64.zip](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-macos-x64.zip) |
-| **Linux** | x64 | [openclaw-manager-linux-x64](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-x64) |
-| **Linux** | ARM64 | [openclaw-manager-linux-arm64](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-arm64) |
+| **Windows** | x64 | [openclaw-manager-win-x64.exe](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-win-x64.exe) |
+| **macOS** | Apple Silicon (M1/M2/M3/M4) | [openclaw-manager-macos-arm64.zip](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-macos-arm64.zip) |
+| **macOS** | Intel | [openclaw-manager-macos-x64.zip](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-macos-x64.zip) |
+| **Linux** | x64 | [openclaw-manager-linux-x64](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-x64) |
+| **Linux** | ARM64 | [openclaw-manager-linux-arm64](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-arm64) |
 
 ### クイックスタート
 
@@ -222,7 +222,7 @@ OpenClaw Manager は [OpenClaw](https://github.com/open-claw/openclaw) AI ゲー
 
 ```bash
 # ダウンロード（x64 の例）
-wget https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-x64
+wget https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/releases/latest/download/openclaw-manager-linux-x64
 chmod +x openclaw-manager-linux-x64
 
 # 実行（自動でバックグラウンド化）
@@ -268,7 +268,7 @@ OpenClaw Manager は初回起動時に以下の依存関係を**自動検出・�
 
 ## 問題反馈 / Issues / フィードバック
 
-[Issue](https://github.com/zhihong-apimart/zhihong-apimart-OpenClaw-Manager-Releases/issues)
+[Issue](https://github.com/zhihong-apimart/OpenClaw-Manager-Releases/issues)
 
 ## License
 
