@@ -1,0 +1,36 @@
+name: Sync with upstream repository
+
+# 触发条件：每天凌晨 2 点自动运行，也可以手动触发
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 每天 UTC 时间 2 点（对应北京时间 10 点）运行
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      # 第一步：检出自己仓库的代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 拉取所有历史记录
+
+      # 第二步：添加上游仓库并拉取更新
+      - name: Sync with upstream
+        run: |
+          # 添加上游仓库（替换成原作者的仓库地址）
+          git remote add upstream https://github.com/zhihong-apimart/OpenClaw-Manager-Releases.git
+          # 拉取上游所有分支的更新
+          git fetch upstream
+          # 切换到主分支
+          git checkout main
+          # 合并上游主分支的更新（如果有冲突会自动失败，需要手动处理）
+          git merge upstream/main --no-edit
+
+      # 第三步：把更新推送到自己的 fork 仓库
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
