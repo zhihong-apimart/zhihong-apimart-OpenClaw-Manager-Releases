@@ -161,7 +161,7 @@ setup_nginx() {
                 warn "无法生成密码文件，请手动运行: htpasswd -cb ${NGINX_HTPASSWD} <用户名> <密码>"
             fi
         fi
-        chmod 640 "$NGINX_HTPASSWD"
+        chmod 644 "$NGINX_HTPASSWD"
         info "访问控制密码文件已创建（使用默认账号密码）✓"
     else
         info "密码文件已存在，升级时保留原有密码不覆盖 ✓"
@@ -252,7 +252,7 @@ else
     [[ -z "$HASHED" ]] && { echo "  错误：无法生成密码哈希，请先安装 apache2-utils 或 httpd-tools"; exit 1; }
     echo "${NEW_USER}:${HASHED}" > "$HTPASSWD_FILE"
 fi
-chmod 640 "$HTPASSWD_FILE"
+chmod 644 "$HTPASSWD_FILE"
 
 # 重载 nginx 使新密码立即生效
 systemctl reload nginx 2>/dev/null || nginx -s reload 2>/dev/null || true
