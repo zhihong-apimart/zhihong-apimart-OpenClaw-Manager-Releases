@@ -86,9 +86,10 @@ install_pkg() {
         apt)
             DEBIAN_FRONTEND=noninteractive \
             NEEDRESTART_MODE=a \
-            apt-get install -y -q \
+            apt-get install -y -qq \
                 -o Dpkg::Use-Pty=0 \
                 -o DPkg::Options::="--force-confold" \
+                -o APT::Get::Show-Upgraded=false \
                 "$pkg" 2>/dev/null
             ;;
         dnf)    dnf install -y -q "$pkg" 2>/dev/null ;;
