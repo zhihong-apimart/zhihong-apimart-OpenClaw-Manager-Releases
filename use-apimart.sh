@@ -211,6 +211,72 @@ done
 
 [ "$UPDATED" -eq 0 ] && error "没有配置被更新，请检查 OpenClaw 是否正确安装"
 
+# 允许远程浏览器访问（写入 allowedOrigins）
+python3 -c "
+import json
+f=open('$HOME/.openclaw/openclaw.json'); d=json.load(f); f.close()
+d.setdefault('gateway',{}).setdefault('controlUi',{})['allowedOrigins']=['*']
+open('$HOME/.openclaw/openclaw.json','w').write(json.dumps(d,indent=2))
+" 2>/dev/null && info "远程访问权限已配置 ✓" || true
+
+# 配置 HTTPS（nginx 反向代理 + 自签证书），解决浏览器安全上下文限制
+setup_https() {
+    command -v nginx &>/dev/null || {
+        step "正在安装 nginx..."
+        if command -v apt-get &>/dev/null; then
+            DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a \
+            apt-get install -y -qq -o Dpkg::Use-Pty=0 nginx 2>/dev/null
+        elif command -v yum &>/dev/null; then yum install -y -q nginx 2>/dev/null
+        elif command -v dnf &>/dev/null; then dnf install -y -q nginx 2>/dev/null
+        fi
+    }
+    command -v nginx &>/dev/null || { warn "nginx 安装失败，跳过 HTTPS 配置"; return 1; }
+
+    # 生成自签证书
+    mkdir -p /etc/nginx/ssl
+    if [ ! -f /etc/nginx/ssl/openclaw.crt ]; then
+        command -v openssl &>/dev/null && \
+        openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+            -keyout /etc/nginx/ssl/openclaw.key \
+            -out /etc/nginx/ssl/openclaw.crt \
+            -subj "/CN=openclaw" 2>/dev/null || { warn "openssl 不可用，跳过 HTTPS"; return 1; }
+    fi
+
+    # 写 nginx 配置
+    cat > /etc/nginx/conf.d/openclaw.conf << 'NGINXEOF'
+server {
+    listen 443 ssl;
+    server_name _;
+    ssl_certificate     /etc/nginx/ssl/openclaw.crt;
+    ssl_certificate_key /etc/nginx/ssl/openclaw.key;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    location / {
+        proxy_pass http://127.0.0.1:18789;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_read_timeout 3600s;
+    }
+}
+server { listen 80; server_name _; return 301 https://$host$request_uri; }
+NGINXEOF
+
+    nginx -t &>/dev/null && systemctl restart nginx &>/dev/null && return 0 || return 1
+}
+
+if [ "$(id -u)" = "0" ]; then
+    step "正在配置 HTTPS 访问..."
+    if setup_https; then
+        HTTPS_OK=true
+        info "HTTPS 已配置 ✓"
+    else
+        HTTPS_OK=false
+    fi
+else
+    HTTPS_OK=false
+fi
+
 # 自动重启 gateway
 step "正在重启 OpenClaw Gateway..."
 if openclaw gateway restart &>/dev/null 2>&1; then
@@ -222,6 +288,13 @@ elif openclaw gateway start &>/dev/null 2>&1; then
 else
     warn "Gateway 未能自动重启，请手动执行: openclaw gateway restart"
 fi
+
+# 获取公网 IP
+PUBLIC_IP=""
+for svc in "https://api.ipify.org" "https://ifconfig.me" "https://icanhazip.com"; do
+    PUBLIC_IP=$(curl -fsSL --max-time 4 "$svc" 2>/dev/null | tr -d '[:space:]' || true)
+    echo "$PUBLIC_IP" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' && break || PUBLIC_IP=""
+done
 
 # =============================================================================
 #  完成
@@ -236,6 +309,26 @@ echo "  ╚═══════════════════════
 echo -e "${RESET}"
 echo -e "  已接入模型：${BOLD}GPT / Claude / Gemini / DeepSeek${RESET} 等"
 echo -e "  默认模型：  ${CYAN}${BOLD}${MODEL_NAME}${RESET}"
+echo ""
+echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+echo -e "${BOLD}  🌐 打开 OpenClaw${RESET}"
+echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+echo ""
+if [ "${HTTPS_OK:-false}" = "true" ] && [ -n "$PUBLIC_IP" ]; then
+    echo -e "  用浏览器打开（点击「高级」→「继续访问」跳过证书警告）："
+    echo -e "  ${CYAN}${BOLD}https://${PUBLIC_IP}${RESET}"
+elif [ -n "$PUBLIC_IP" ]; then
+    echo -e "  用浏览器打开："
+    echo -e "  ${CYAN}${BOLD}http://${PUBLIC_IP}:18789${RESET}"
+    echo -e "  ${YELLOW}提示：如出现安全限制，请在服务器上以 root 身份重新运行本脚本${RESET}"
+else
+    echo -e "  用浏览器打开（将 <服务器IP> 替换为实际地址）："
+    if [ "${HTTPS_OK:-false}" = "true" ]; then
+        echo -e "  ${CYAN}${BOLD}https://<服务器IP>${RESET}"
+    else
+        echo -e "  ${CYAN}${BOLD}http://<服务器IP>:18789${RESET}"
+    fi
+fi
 echo ""
 echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo -e "${BOLD}  🆘 遇到问题？复制以下命令处理${RESET}"
