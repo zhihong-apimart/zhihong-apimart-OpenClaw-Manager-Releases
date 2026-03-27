@@ -223,20 +223,38 @@ else
 fi
 
 # =============================================================================
-#  获取本机 IP（用于显示 Manager UI 地址）
+#  获取本机 IP + Gateway Token（用于显示带 token 的 Manager 直达链接）
 # =============================================================================
 GATEWAY_PORT=18789
 # 优先用公网 IP，其次局域网 IP
 SERVER_IP=""
-# 尝试获取公网 IP（多个来源容错）
 for ip_url in "https://api.ipify.org" "https://ip.sb" "https://ifconfig.me"; do
     SERVER_IP=$(curl -fsS --max-time 3 "$ip_url" 2>/dev/null | tr -d '[:space:]') && break || true
 done
-# 公网获取失败则用局域网 IP
 if [ -z "$SERVER_IP" ]; then
     SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}') || SERVER_IP="你的服务器IP"
 fi
-MANAGER_URL="http://${SERVER_IP}:${GATEWAY_PORT}"
+
+# 读取 Gateway Token（如果有）
+GW_TOKEN=""
+for cfg in "${ALL_CONFIGS[@]}"; do
+    GW_TOKEN=$(python3 -c "
+import json,sys
+try:
+    with open('$cfg') as f: d=json.load(f)
+    print(d.get('gateway',{}).get('auth',{}).get('token',''))
+except: pass
+" 2>/dev/null) && [ -n "$GW_TOKEN" ] && break || true
+done
+
+# 构建直达链接（带 token 参数则一键进入，无需手填）
+if [ -n "$GW_TOKEN" ]; then
+    MANAGER_URL="http://${SERVER_IP}:${GATEWAY_PORT}/chat?session=main&wsUrl=ws://${SERVER_IP}:${GATEWAY_PORT}&token=${GW_TOKEN}"
+    MANAGER_HINT="（已含登录凭证，点开即进，无需填写任何内容）"
+else
+    MANAGER_URL="http://${SERVER_IP}:${GATEWAY_PORT}"
+    MANAGER_HINT=""
+fi
 
 # =============================================================================
 #  完成 —— 傻瓜式指引
@@ -265,6 +283,7 @@ echo -e "  ${BOLD}🖥️  管理界面地址（用浏览器打开）：${RESET}
 echo ""
 echo -e "    ${CYAN}${BOLD}  👉  ${MANAGER_URL}  ${RESET}"
 echo ""
+echo -e "  ${MANAGER_HINT}"
 echo -e "  可以在这里查看运行状态、切换模型、管理频道"
 echo ""
 echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
