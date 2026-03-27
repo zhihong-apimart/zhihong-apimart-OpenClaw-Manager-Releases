@@ -7,25 +7,21 @@
 # =============================================================================
 set -euo pipefail
 
-# ---------- 颜色 ----------
+# ---------- 颜色（终端不支持时自动降级）----------
 if [ -t 1 ] && command -v tput &>/dev/null && tput colors &>/dev/null 2>&1; then
     RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
     CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
 else
     RED=''; GREEN=''; YELLOW=''; CYAN=''; BOLD=''; RESET=''
 fi
-
 info()    { echo -e "${GREEN}[✓]${RESET} $*"; }
 warn()    { echo -e "${YELLOW}[!]${RESET} $*"; }
 error()   { echo -e "${RED}[✗]${RESET} $*" >&2; exit 1; }
 section() { echo -e "\n${CYAN}${BOLD}>>> $*${RESET}"; }
-step()    { echo -e "    ... $*"; }
 
 # =============================================================================
-#  Banner
-# =============================================================================
 echo ""
-echo -e "${BOLD}${CYAN}"
+echo -e "${CYAN}${BOLD}"
 echo "  ╔══════════════════════════════════════════════╗"
 echo "  ║                                              ║"
 echo "  ║      🦞  APIMart 一键接入脚本                ║"
@@ -38,29 +34,29 @@ echo ""
 # =============================================================================
 #  Step 1: 检查依赖
 # =============================================================================
-section "Step 1/4  检查依赖环境"
+section "Step 1/4  检查环境"
 
-# 安装 jq
+# 自动安装 jq
 if ! command -v jq &>/dev/null; then
-    step "正在自动安装 jq..."
-    if command -v apt-get &>/dev/null; then
+    echo -e "    ... 正在安装 jq..."
+    if   command -v apt-get &>/dev/null; then
         DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a \
         apt-get install -y -qq -o Dpkg::Use-Pty=0 jq 2>/dev/null
     elif command -v yum  &>/dev/null; then yum  install -y -q jq 2>/dev/null
     elif command -v dnf  &>/dev/null; then dnf  install -y -q jq 2>/dev/null
-    elif command -v brew &>/dev/null; then brew install jq -q  2>/dev/null
-    elif command -v apk  &>/dev/null; then apk  add -q jq      2>/dev/null
+    elif command -v brew &>/dev/null; then brew install -q jq  2>/dev/null
+    elif command -v apk  &>/dev/null; then apk  add -q    jq  2>/dev/null
     else error "无法自动安装 jq，请手动执行: apt install jq"; fi
-    command -v jq &>/dev/null || error "jq 安装失败"
+    command -v jq &>/dev/null || error "jq 安装失败，请联系技术支持"
 fi
 info "jq ✓"
 
 command -v openclaw &>/dev/null || \
-    error "未检测到 OpenClaw，请先安装: curl -fsSL https://openclaw.ai/install.sh | bash"
+    error "未检测到 OpenClaw，请先安装官方龙虾: curl -fsSL https://openclaw.ai/install.sh | bash"
 info "OpenClaw $(openclaw --version 2>/dev/null | head -1) ✓"
 
 # =============================================================================
-#  Step 2: 获取 API Key
+#  Step 2: API Key
 # =============================================================================
 section "Step 2/4  输入 APIMart API Key"
 
@@ -75,16 +71,16 @@ fi
 info "API Key ✓"
 
 # =============================================================================
-#  Step 3: 选择节点和模型
+#  Step 3: 选择节点和默认模型
 # =============================================================================
-section "Step 3/4  配置节点与模型"
+section "Step 3/4  选择节点与默认模型"
 
 echo ""
-echo -e "  ${BOLD}选择 APIMart 节点：${RESET}"
+echo -e "  ${BOLD}APIMart 节点：${RESET}"
 echo "    1) 国际节点  ← 海外服务器 / 国际用户"
 echo "    2) 香港节点  ← 国内用户 / 国内服务器"
 echo ""
-read -rp "  请输入选项 [1/2，回车默认国际]: " NODE_CHOICE
+read -rp "  请输入 [1/2，回车默认国际]: " NODE_CHOICE
 case "${NODE_CHOICE:-1}" in
     2) HOST="cn-api.apimart.ai" ; NODE_NAME="香港节点" ;;
     *) HOST="api.apimart.ai"    ; NODE_NAME="国际节点" ;;
@@ -92,39 +88,47 @@ esac
 info "节点: ${NODE_NAME} ✓"
 
 echo ""
-echo -e "  ${BOLD}选择默认模型：${RESET}"
+echo -e "  ${BOLD}默认模型：${RESET}"
 echo "    1) GPT-5.3            — OpenAI 旗舰"
 echo "    2) Claude Sonnet 4.6  — Anthropic，擅长写作分析"
 echo "    3) DeepSeek V3.2      — 国产高性价比"
 echo "    4) Gemini 2.5 Pro     — Google 最新旗舰"
 echo ""
-read -rp "  请输入选项 [1-4，回车默认 GPT-5.3]: " MODEL_CHOICE
+read -rp "  请输入 [1-4，回车默认 GPT-5.3]: " MODEL_CHOICE
 case "${MODEL_CHOICE:-1}" in
     2) DEFAULT_MODEL="apimart-claude/claude-sonnet-4-6" ; MODEL_NAME="Claude Sonnet 4.6" ;;
     3) DEFAULT_MODEL="apimart/deepseek-v3.2"            ; MODEL_NAME="DeepSeek V3.2"     ;;
     4) DEFAULT_MODEL="apimart-gemini/gemini-2.5-pro"    ; MODEL_NAME="Gemini 2.5 Pro"    ;;
     *) DEFAULT_MODEL="apimart/gpt-5.3"                  ; MODEL_NAME="GPT-5.3"           ;;
 esac
-info "模型: ${MODEL_NAME} ✓"
+info "默认模型: ${MODEL_NAME} ✓"
 
 # =============================================================================
 #  构建 providers JSON
 # =============================================================================
 PROVIDERS=$(jq -n --arg host "$HOST" --arg key "$API_KEY" '{
   "apimart": {
-    "baseUrl": ("https://"+$host+"/v1"), "api": "openai-completions", "apiKey": $key,
+    "baseUrl": ("https://"+$host+"/v1"),
+    "api": "openai-completions",
+    "apiKey": $key,
     "models": [
-      {"id":"gpt-5.3-codex","name":"GPT-5.3 Codex"},{"id":"gpt-5.3","name":"GPT-5.3"},
-      {"id":"gpt-5.2","name":"GPT-5.2"},{"id":"gpt-5.1","name":"GPT-5.1"},
-      {"id":"gpt-5","name":"GPT-5"},{"id":"deepseek-v3.2","name":"DeepSeek V3.2"},
+      {"id":"gpt-5.3-codex","name":"GPT-5.3 Codex"},
+      {"id":"gpt-5.3","name":"GPT-5.3"},
+      {"id":"gpt-5.2","name":"GPT-5.2"},
+      {"id":"gpt-5.1","name":"GPT-5.1"},
+      {"id":"gpt-5","name":"GPT-5"},
+      {"id":"deepseek-v3.2","name":"DeepSeek V3.2"},
       {"id":"deepseek-v3-0324","name":"DeepSeek V3-0324"},
       {"id":"deepseek-r1-0528","name":"DeepSeek R1-0528"},
-      {"id":"glm-5","name":"GLM-5"},{"id":"kimi-k2.5","name":"Kimi K2.5"},
+      {"id":"glm-5","name":"GLM-5"},
+      {"id":"kimi-k2.5","name":"Kimi K2.5"},
       {"id":"minimax-m2.5","name":"MiniMax M2.5"}
     ]
   },
   "apimart-claude": {
-    "baseUrl": ("https://"+$host), "api": "anthropic-messages", "apiKey": $key,
+    "baseUrl": ("https://"+$host),
+    "api": "anthropic-messages",
+    "apiKey": $key,
     "models": [
       {"id":"claude-opus-4-6","name":"Claude Opus 4.6"},
       {"id":"claude-sonnet-4-6","name":"Claude Sonnet 4.6"},
@@ -134,7 +138,9 @@ PROVIDERS=$(jq -n --arg host "$HOST" --arg key "$API_KEY" '{
     ]
   },
   "apimart-gemini": {
-    "baseUrl": ("https://"+$host+"/v1beta"), "api": "google-generative-ai", "apiKey": $key,
+    "baseUrl": ("https://"+$host+"/v1beta"),
+    "api": "google-generative-ai",
+    "apiKey": $key,
     "models": [
       {"id":"gemini-2.5-pro","name":"Gemini 2.5 Pro"},
       {"id":"gemini-2.5-flash","name":"Gemini 2.5 Flash"},
@@ -145,202 +151,71 @@ PROVIDERS=$(jq -n --arg host "$HOST" --arg key "$API_KEY" '{
 }')
 
 # =============================================================================
-#  Step 4: 写入配置、配置 Gateway、配置 HTTPS
+#  Step 4: 写入配置 + 重启 Gateway
 # =============================================================================
-section "Step 4/4  写入配置并启动服务"
+section "Step 4/4  写入配置并重启"
 
 HOME_DIR="$HOME"
 ALL_CONFIGS=()
-[ -f "$HOME_DIR/.openclaw/openclaw.json" ] && ALL_CONFIGS+=("$HOME_DIR/.openclaw/openclaw.json")
+[ -f "$HOME_DIR/.openclaw/openclaw.json" ]   && ALL_CONFIGS+=("$HOME_DIR/.openclaw/openclaw.json")
 for d in "$HOME_DIR"/.openclaw-*/; do
     [ -f "${d}openclaw.json" ] && ALL_CONFIGS+=("${d}openclaw.json")
 done
 
-# 没有配置则自动创建
+# 没有配置文件则自动创建
 if [ ${#ALL_CONFIGS[@]} -eq 0 ]; then
-    step "初始化 OpenClaw 配置..."
     mkdir -p "$HOME_DIR/.openclaw"
     echo '{"models":{},"agents":{"defaults":{"model":{"primary":""}}}}' \
         > "$HOME_DIR/.openclaw/openclaw.json"
     ALL_CONFIGS+=("$HOME_DIR/.openclaw/openclaw.json")
+    info "配置目录已创建 ✓"
 fi
 
-# 写入 providers + 默认模型 + gateway 配置
+# 写入
 UPDATED=0
 for cfg in "${ALL_CONFIGS[@]}"; do
     cp "$cfg" "${cfg}.before-apimart" 2>/dev/null || true
     TEMP=$(mktemp)
-    if jq --argjson p "$PROVIDERS" --arg m "$DEFAULT_MODEL" '
-        .models.providers = $p
-        | .agents.defaults.model.primary = $m
-        | .gateway.mode = "local"
-        | .gateway.bind = "lan"
-        | .gateway.controlUi.allowedOrigins = ["*"]
-        | if (.gateway.auth.token? // "" | length) == 0 then .gateway.auth.token = (now | tostring | ltrimstr("0") | gsub("[^a-z0-9]";"") | .[0:48]) else . end
-        ' "$cfg" > "$TEMP" 2>/dev/null && [ -s "$TEMP" ]; then
+    if jq --argjson p "$PROVIDERS" --arg m "$DEFAULT_MODEL" \
+        '.models.providers = $p | .agents.defaults.model.primary = $m' \
+        "$cfg" > "$TEMP" 2>/dev/null && [ -s "$TEMP" ]; then
         mv "$TEMP" "$cfg"
-        info "配置写入 ✓"
+        info "配置已写入: $cfg ✓"
         UPDATED=$((UPDATED+1))
     else
-        rm -f "$TEMP"; warn "写入失败: $cfg"
+        rm -f "$TEMP"
+        warn "写入失败: $cfg"
     fi
 done
-[ "$UPDATED" -eq 0 ] && error "配置写入失败"
+[ "$UPDATED" -eq 0 ] && error "配置写入失败，请检查 OpenClaw 是否正确安装"
 
-# 从配置文件读取 auth token（OpenClaw 自动生成的）
-GW_TOKEN=$(python3 -c "import json; d=json.load(open('${HOME_DIR}/.openclaw/openclaw.json')); print(d.get('gateway',{}).get('auth',{}).get('token',''))" 2>/dev/null || true)
-# 如果配置里没有，用 openssl 生成并写入
-if [ -z "$GW_TOKEN" ]; then
-    GW_TOKEN=$(openssl rand -hex 24 2>/dev/null || echo "apimart$(date +%s)")
-    python3 -c "
-import json
-f=open('${HOME_DIR}/.openclaw/openclaw.json'); d=json.load(f); f.close()
-d.setdefault('gateway',{}).setdefault('auth',{})['token']='${GW_TOKEN}'
-open('${HOME_DIR}/.openclaw/openclaw.json','w').write(json.dumps(d,indent=2))
-" 2>/dev/null || true
-fi
-step "Gateway Token 已就绪"
-
-# 创建 system 级 systemd service
-if [ "$(id -u)" = "0" ] && command -v systemctl &>/dev/null; then
-    NODE_BIN=$(which node 2>/dev/null || echo "/usr/bin/node")
-    OPENCLAW_JS=$(find /usr /usr/local -name "index.js" -path "*/openclaw/dist/*" 2>/dev/null | head -1)
-    [ -z "$OPENCLAW_JS" ] && OPENCLAW_JS="/usr/lib/node_modules/openclaw/dist/index.js"
-
-    cat > /etc/systemd/system/openclaw-gateway.service << EOF
-[Unit]
-Description=OpenClaw Gateway
-After=network.target
-
-[Service]
-Type=simple
-User=root
-Environment=HOME=/root
-Environment=OPENCLAW_GATEWAY_PORT=18789
-ExecStart=${NODE_BIN} ${OPENCLAW_JS} gateway --port 18789
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
-    systemctl daemon-reload
-    systemctl enable openclaw-gateway &>/dev/null
-    systemctl restart openclaw-gateway
-    sleep 6
-    systemctl is-active openclaw-gateway &>/dev/null && info "Gateway 系统服务已启动 ✓" || warn "Gateway 启动异常，请检查: journalctl -u openclaw-gateway -n 20"
-else
-    openclaw gateway restart &>/dev/null 2>&1 || true
-    sleep 3
+# 重启 Gateway
+echo -e "    ... 重启 OpenClaw Gateway..."
+if openclaw gateway restart &>/dev/null 2>&1; then
+    sleep 2
     info "Gateway 已重启 ✓"
-fi
-
-# 配置 HTTPS（nginx + 自签证书）
-setup_https() {
-    command -v nginx &>/dev/null || {
-        step "安装 nginx..."
-        if   command -v apt-get &>/dev/null; then
-            DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a \
-            apt-get install -y -qq -o Dpkg::Use-Pty=0 nginx openssl 2>/dev/null
-        elif command -v yum &>/dev/null; then yum install -y -q nginx openssl 2>/dev/null
-        elif command -v dnf &>/dev/null; then dnf install -y -q nginx openssl 2>/dev/null
-        else return 1; fi
-    }
-    command -v nginx &>/dev/null || return 1
-
-    mkdir -p /etc/nginx/ssl
-    [ -f /etc/nginx/ssl/openclaw.crt ] || \
-    openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
-        -keyout /etc/nginx/ssl/openclaw.key \
-        -out    /etc/nginx/ssl/openclaw.crt \
-        -subj   "/CN=openclaw" 2>/dev/null || return 1
-
-    cat > /etc/nginx/conf.d/openclaw.conf << 'NGINXEOF'
-server {
-    listen 443 ssl;
-    server_name _;
-    ssl_certificate     /etc/nginx/ssl/openclaw.crt;
-    ssl_certificate_key /etc/nginx/ssl/openclaw.key;
-    ssl_protocols       TLSv1.2 TLSv1.3;
-    location / {
-        proxy_pass http://127.0.0.1:18789;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_read_timeout 3600s;
-    }
-}
-server { listen 80; server_name _; return 301 https://$host$request_uri; }
-NGINXEOF
-
-    nginx -t &>/dev/null && systemctl restart nginx &>/dev/null && return 0 || return 1
-}
-
-HTTPS_OK=false
-if [ "$(id -u)" = "0" ]; then
-    step "配置 HTTPS..."
-    setup_https && HTTPS_OK=true && info "HTTPS 已配置 ✓" || warn "HTTPS 配置失败，将使用 HTTP"
-fi
-
-# 获取公网 IP
-PUBLIC_IP=""
-for svc in "https://api.ipify.org" "https://ifconfig.me" "https://icanhazip.com"; do
-    PUBLIC_IP=$(curl -fsSL --max-time 4 "$svc" 2>/dev/null | tr -d '[:space:]' || true)
-    echo "$PUBLIC_IP" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' && break || PUBLIC_IP=""
-done
-[ -z "$PUBLIC_IP" ] && PUBLIC_IP="<你的服务器IP>"
-
-# 拼接带 token 的访问链接
-if [ "$HTTPS_OK" = "true" ]; then
-    ACCESS_URL="https://${PUBLIC_IP}/#token=${GW_TOKEN}"
-    WS_URL="wss://${PUBLIC_IP}"
 else
-    ACCESS_URL="http://${PUBLIC_IP}:18789/#token=${GW_TOKEN}"
-    WS_URL="ws://${PUBLIC_IP}:18789"
-fi
-
-# 验证 gateway 确实在跑
-if ! ss -tlnp 2>/dev/null | grep -q ":18789" && ! netstat -tlnp 2>/dev/null | grep -q ":18789"; then
-    warn "Gateway 端口 18789 未检测到，请手动执行: systemctl restart openclaw-gateway"
+    warn "Gateway 重启失败，请手动执行: openclaw gateway restart"
 fi
 
 # =============================================================================
 #  完成
 # =============================================================================
 echo ""
-echo -e "${BOLD}${GREEN}"
+echo -e "${GREEN}${BOLD}"
 echo "  ╔══════════════════════════════════════════════════════╗"
 echo "  ║                                                      ║"
 echo "  ║      🎉  接入成功！                                  ║"
 echo "  ║                                                      ║"
 echo "  ╚══════════════════════════════════════════════════════╝"
 echo -e "${RESET}"
-
-echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-echo -e "${BOLD}  🌐 用浏览器打开以下链接，直接进入 OpenClaw${RESET}"
-echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-echo ""
-echo -e "  ${CYAN}${BOLD}${ACCESS_URL}${RESET}"
-echo ""
-if [ "$HTTPS_OK" = "true" ]; then
-    echo -e "  ${YELLOW}提示：浏览器提示「不安全」→ 点「高级」→「继续访问」即可${RESET}"
-fi
-echo ""
-echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-echo -e "${BOLD}  ✅ 配置摘要${RESET}"
-echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-echo ""
 echo -e "  节点：     ${BOLD}${NODE_NAME}${RESET}"
 echo -e "  默认模型： ${BOLD}${MODEL_NAME}${RESET}"
 echo ""
 echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-echo -e "${BOLD}  🆘 遇到问题？复制命令执行${RESET}"
+echo -e "  重新打开飞书 / Telegram，即可使用 APIMart 全系模型"
 echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo ""
-echo -e "  打不开 / 模型没更新，重启服务："
-echo -e "  ${CYAN}systemctl restart openclaw-gateway${RESET}"
-echo ""
-echo -e "  恢复到接入前的状态："
-echo -e "  ${CYAN}cp ~/.openclaw/openclaw.json.before-apimart ~/.openclaw/openclaw.json && systemctl restart openclaw-gateway${RESET}"
+echo -e "  ${BOLD}出问题？一条命令恢复原状：${RESET}"
+echo -e "  ${CYAN}cp ~/.openclaw/openclaw.json.before-apimart ~/.openclaw/openclaw.json && openclaw gateway restart${RESET}"
 echo ""
