@@ -205,6 +205,9 @@ if gw.get('bind') not in ('lan', 'auto'):
 cui = gw.setdefault('controlUi', {})
 if cui.get('allowedOrigins') != ['*']:
     cui['allowedOrigins'] = ['*']; changed = True
+# 关闭设备配对要求，允许浏览器直接用 token 连接管理界面
+if not cui.get('dangerouslyDisableDeviceAuth'):
+    cui['dangerouslyDisableDeviceAuth'] = True; changed = True
 if changed:
     with open(path, 'w') as f: json.dump(d, f, indent=2)
     print("gateway config patched")
